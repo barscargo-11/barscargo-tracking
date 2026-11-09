@@ -1,1 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BARS CARGO — Отслеживание посылок</title>
+<style>
+* { box-sizing: border-box; }
 
+body {
+  margin: 0;
+  padding: 20px 14px;
+  font-family: Arial, sans-serif;
+  background: #f1f8f8;
+  color: #254746;
+}
+
+.container {
+  width: 100%;
+  max-width: 520px;
+  margin: 20px auto;
+}
+
+.header {
+  background: #159e9b;
+  color: white;
+  text-align: center;
+  padding: 25px 15px;
+  border-radius: 18px 18px 0 0;
+}
+
+.logo {
+  font-size: 27px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.subtitle {
+  font-size: 13px;
+  margin-top: 7px;
+}
+
+.content {
+  background: white;
+  padding: 28px 22px;
+  border-radius: 0 0 18px 18px;
+  box-shadow: 0 5px 20px rgba(0,0,0,.06);
+}
+
+h1 {
+  color: #159e9b;
+  font-size: 26px;
+  text-align: center;
+  margin: 0 0 14px;
+}
+
+.description {
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #607876;
+}
+
+input {
+  width: 100%;
+  padding: 16px;
+  margin: 18px 0 12px;
+  border: 2px solid #b9ddda;
+  border-radius: 11px;
+  font-size: 18px;
+  outline-color: #159e9b;
+}
+
+button {
+  width: 100%;
+  padding: 17px;
+  border: none;
+  border-radius: 11px;
+  background: #159e9b;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled { opacity: .6; }
+
+#message {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 16px;
+}
+
+.parcel {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid #d5eae8;
+  border-radius: 13px;
+  background: #f8fcfb;
+  overflow-wrap: anywhere;
+}
+
+.parcel p {
+  margin: 9px 0;
+  line-height: 1.5;
+  font-size: 16px;
+}
+
+.parcel strong { color: #159e9b; }
+
+.footer {
+  text-align: center;
+  color: #78918f;
+  font-size: 13px;
+  margin: 20px 0;
+}
+
+@media(max-width: 480px) {
+  body { padding: 10px; }
+  .container { margin: 5px auto; }
+  .content { padding: 24px 17px; }
+  h1 { font-size: 24px; }
+  .logo { font-size: 25px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="logo">BARS CARGO</div>
+    <div class="subtitle">ДОСТАВКА ИЗ КИТАЯ</div>
+  </div>
+
+  <div class="content">
+    <h1>Отслеживание посылок</h1>
+    <div class="description">
+      Введите персональный код клиента,
+      чтобы узнать статус своих посылок.
+    </div>
+
+    <input id="clientCode" placeholder="Персональный код" autocomplete="off">
+    <button id="searchButton" onclick="searchParcels()">НАЙТИ ПОСЫЛКУ</button>
+
+    <div id="message"></div>
+    <div id="results"></div>
+  </div>
+
+  <div class="footer">
+    BARS CARGO · Доставка из Китая
+  </div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxUVOTOs68zii-Eajt8eTeOOoqu09mMk2hLbjqP9Wqc399it5Jj-4uzq2QRwVYF6FY0Zg/exec";
+
+function searchParcels() {
+  const code = document.getElementById("clientCode").value.trim();
+  const message = document.getElementById("message");
+  const results = document.getElementById("results");
+  const button = document.getElementById("searchButton");
+
+  results.innerHTML = "";
+
+  if (!code) {
+    message.textContent = "Введите персональный код клиента.";
+    return;
+  }
+
+  if (!API_URL.startsWith("https://")) {
+    message.textContent = "Не настроена ссылка подключения.";
+    return;
+  }
+
+  message.textContent = "Ищем ваши посылки...";
+  button.disabled = true;
+
+  const callback = "barsCargoCallback_" + Date.now();
+  const script = document.createElement("script");
+
+  window[callback] = function(data) {
+    delete window[callback];
+    script.remove();
+    button.disabled = false;
+
+    if (!data || !Array.isArray(data.parcels) || data.parcels.length === 0) {
+      message.textContent = "Посылки по этому коду не найдены.";
+      return;
+    }
+
+    message.textContent = "Найдено посылок: " + data.parcels.length;
+
+    data.parcels.forEach(parcel => {
+      const card = document.createElement("div");
+      card.className = "parcel";
+
+      const fields = [
+        ["Китайский трек-код", parcel.track],
+        ["Статус", parcel.status],
+        ["Дата отправки из Китая", parcel.sent],
+        ["Дата прибытия в Бишкек", parcel.arrived],
+        ["Готовность к выдаче", parcel.ready],
+        ["Дата выдачи", parcel.issued]
+      ];
+
+      fields.forEach(([label, value]) => {
+        if (value) {
+          const p = document.createElement("p");
+          const strong = document.createElement("strong");
+          strong.textContent = label + ": ";
+          p.appendChild(strong);
+          p.appendChild(document.createTextNode(value));
+          card.appendChild(p);
+        }
+      });
+
+      results.appendChild(card);
+    });
+  };
+
+  window[callback + "_error"] = function() {
+    delete window[callback];
+    button.disabled = false;
+    script.remove();
+    message.textContent = "Не удалось получить данные. Попробуйте ещё раз.";
+  };
+
+  script.onerror = function() {
+    delete window[callback];
+    button.disabled = false;
+    script.remove();
+    message.textContent = "Ошибка соединения. Попробуйте позже.";
+  };
+
+  script.src = API_URL
+    + "?api=1&code=" + encodeURIComponent(code)
+    + "&callback=" + callback;
+
+  document.body.appendChild(script);
+}
+
+document.getElementById("clientCode").addEventListener("keydown", function(event) {
+  if (event.key === "Enter") searchParcels();
+});
+</script>
+</body>
+</html>
