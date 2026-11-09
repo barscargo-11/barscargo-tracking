@@ -151,7 +151,7 @@ button:disabled {
   <div class="content">
     <h1>Отслеживание посылок</h1>
     <div class="description">
-      Введите персональный код клиента,
+      Введите трек-код,
       чтобы узнать статус своих посылок.
     </div>
 
@@ -179,7 +179,7 @@ function searchParcels() {
   results.innerHTML = "";
 
   if (!code) {
-    message.textContent = "Введите персональный код клиента.";
+    message.textContent = "Введите трек-код.";
     return;
   }
 
