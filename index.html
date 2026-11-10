@@ -155,7 +155,7 @@ button:disabled {
       чтобы узнать статус своих посылок.
     </div>
 
-    <input id="clientCode" placeholder="Трек-код" autocomplete="off">
+    <input id="clientCode" placeholder="Введите один или несколько трек-кодов" autocomplete="off">
     <button id="searchButton" onclick="searchParcels()">НАЙТИ ПОСЫЛКУ</button>
 
     <div id="message"></div>
@@ -179,7 +179,7 @@ function searchParcels() {
   results.innerHTML = "";
 
   if (!code) {
-    message.textContent = "Введите один или несколько трек-кодов.";
+    message.textContent = "Введите трек-код.";
     return;
   }
 
